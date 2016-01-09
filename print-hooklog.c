@@ -3,6 +3,9 @@
 #include <errno.h>
 #include <stdint.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <ctype.h>
 
 struct record {
 	size_t recsz;
@@ -14,6 +17,9 @@ struct record {
 	int num;
 	char *buf;
 };
+
+#define RTYPE_READ 0
+#define RTYPE_WRITE 1
 
 // returns -1 on error, 0 on eof, 1 on read record
 static int record_read(struct record *r, FILE *in) {
@@ -72,10 +78,59 @@ static void record_clean(struct record *r) {
 	}
 }
 
-// returns -1 on error, 0 on success
-static int record_print(struct record *r, FILE *out) {
-	// TODO: Implement
-	return 0;
+#define ISPRINT(c) \
+	(isascii((c)) && (c) != '\r' && (c) != '\n')
+
+static void record_print(struct record *r, FILE *out) {
+	char addr[128], port[32], peeraddr[128], peerport[32];
+	int i, j, nrowbytes;
+
+	if ((getnameinfo(&r->saddr, r->saddrlen, addr, sizeof(addr),
+			port, sizeof(port), NI_NUMERICHOST|NI_NUMERICSERV) < 0) ||
+			(getnameinfo(&r->paddr, r->paddrlen, peeraddr, sizeof(peeraddr),
+			peerport, sizeof(peerport), NI_NUMERICHOST|NI_NUMERICSERV) < 0)) {
+		fprintf(out, "<invalid addr record>\n\n");
+		return;
+	}
+
+	if (r->type == RTYPE_READ) {
+		fprintf(out, "read  - %s %s -> %s %s\n", peeraddr, peerport, addr, port);
+	} else if (r->type == RTYPE_WRITE) {
+		fprintf(out, "write - %s %s -> %s %s\n", addr, port, peeraddr, peerport);
+	} else {
+		fprintf(out, "unknown record type (%hhu) local: %s:%s peer: %s:%s\n",
+				r->type, addr, port, peeraddr, peerport);
+	}
+
+	i=0;
+	while (i < r->num) {
+		fprintf(out, "%08x  ", i);
+		nrowbytes = r->num-i;
+		if (nrowbytes > 16) {
+			nrowbytes = 16;
+		}
+
+		for(j=0; j<nrowbytes; j++) {
+			fprintf(out, "%02x ", (int)r->buf[i+j]);
+			if (j == 7) {
+				fprintf(out, " ");
+			}
+		}
+
+		for(j=nrowbytes; j < 16; j++) {
+			fprintf(out, "   ");
+		}
+
+		fprintf(out, " |");
+		for(j=0; j < nrowbytes; j++) {
+			fprintf(out, "%c", ISPRINT(r->buf[i+j]) ? r->buf[i+j] : '.');
+		}
+
+		fprintf(out, "|\n");
+		i+=nrowbytes;
+	}
+
+	fprintf(out, "%08x\n\n", r->num);
 }
 
 int main(int argc, char *argv[]) {
