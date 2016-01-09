@@ -17,6 +17,8 @@ openssl-hook uses LD_PRELOAD to hook the OpenSSL functions *SSL_read* and
 The logged data is written to *hooklog.bin* in the current working directory.
 The file format is platform-dependent.
 
+Errors are written to stderr and the application is terminated.
+
 ## Example
 
 using bash and [socat](http://www.dest-unreach.org/socat/):
