@@ -13,11 +13,14 @@ A commonly used library for sending data over TLS is
 
 openssl-hook uses LD_PRELOAD to hook the OpenSSL functions *SSL_read* and
 *SSL_write* and writes the read/written data to disk for later inspection.
+This can be used to debug network applications sending/receiving data using
+a dynamically linked OpenSSL library.
 
 The logged data is written to *hooklog.bin* in the current working directory.
 The file format is platform-dependent.
 
-Errors are written to stderr and the application is terminated.
+Any encountered errors in the hook code gets written to *stderr*. Hook errors
+causes application termination.
 
 ## Example
 
