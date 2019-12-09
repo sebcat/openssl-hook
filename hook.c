@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <stdint.h>
+#include <sys/uio.h>
 
 #define _CONSTRUCTOR __attribute__((constructor))
 #define _DESTRUCTOR __attribute__ ((destructor))
