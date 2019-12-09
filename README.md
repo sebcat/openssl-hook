@@ -24,15 +24,15 @@ causes application termination.
 
 ## Example
 
-using bash and [socat](http://www.dest-unreach.org/socat/):
+using a POSIX shell and [socat](http://www.dest-unreach.org/socat/):
 
 ````
 $ make
 cc -Wall -Werror -g -fPIC -shared -o hook.so.1 hook.c -lc
 cc -Wall -Werror -g -o print-hooklog print-hooklog.c -lc
-$ echo -en 'GET / HTTP/1.1\r\nHost: www.google.com\r\n\r\n' | \
+$ printf 'GET / HTTP/1.1\r\nHost: www.google.com\r\n\r\n' | \
 	LD_PRELOAD=`pwd`/hook.so.1 \
-	socat stdio openssl-connect:www.google.com:443,verify=0
+	socat stdio openssl-connect:www.google.com:443
 [...]
 $ ./print-hooklog hooklog.bin
 write - 192.168.0.8 39808 -> 83.255.235.89 443
