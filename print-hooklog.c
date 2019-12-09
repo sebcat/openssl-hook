@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
 
 	fp = fopen(argv[1], "rb");
 	if (fp == NULL) {
-		perror("fopen");
+		perror(argv[1]);
 		return EXIT_FAILURE;
 	}
 
